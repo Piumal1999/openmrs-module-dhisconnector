@@ -15,6 +15,8 @@ package org.openmrs.module.dhisconnector.api.db;
 
 import java.util.List;
 
+import org.openmrs.Location;
+import org.openmrs.module.dhisconnector.LocationToOrgUnitMapping;
 import org.openmrs.module.dhisconnector.ReportToDataSetMapping;
 
 /**
@@ -31,4 +33,16 @@ public interface DHISConnectorDAO {
 	void deleteReportToDataSetMapping(ReportToDataSetMapping reportToDataSetMapping);
 
 	void saveReportToDataSetMapping(ReportToDataSetMapping reportToDataSetMapping);
+
+	List<LocationToOrgUnitMapping> getAllLocationToOrgUnitMappings();
+
+	LocationToOrgUnitMapping getLocationToOrgUnitMappingByUuid(String uuid);
+
+	LocationToOrgUnitMapping getLocationToOrgUnitMapping(Integer id);
+
+	void deleteLocationToOrgUnitMapping(LocationToOrgUnitMapping locationToOrgUnitMapping);
+
+	void deleteLocationToOrgUnitMappingsByLocation(Location location);
+
+	void saveLocationToOrgUnitMapping(LocationToOrgUnitMapping locationToOrgUnitMapping);
 }

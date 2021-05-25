@@ -83,6 +83,7 @@ import org.openmrs.Location;
 import org.openmrs.api.context.Context;
 import org.openmrs.api.impl.BaseOpenmrsService;
 import org.openmrs.module.dhisconnector.Configurations;
+import org.openmrs.module.dhisconnector.LocationToOrgUnitMapping;
 import org.openmrs.module.dhisconnector.ReportToDataSetMapping;
 import org.openmrs.module.dhisconnector.ReportToDataSetMapping.ReportingPeriodType;
 import org.openmrs.module.dhisconnector.adx.AdxDataValue;
@@ -1612,5 +1613,40 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 		}
 		
 		return responses;
+	}
+
+	@Override
+	public List<LocationToOrgUnitMapping> getAllLocationToOrgUnitMappings() {
+		return getDao().getAllLocationToOrgUnitMappings();
+	}
+
+	@Override
+	public LocationToOrgUnitMapping getLocationToOrgUnitMappingByUuid(String uuid) {
+		return getDao().getLocationToOrgUnitMappingByUuid(uuid);
+	}
+
+	@Override
+	public LocationToOrgUnitMapping getLocationToOrgUnitMapping(Integer id) {
+		return getDao().getLocationToOrgUnitMapping(id);
+	}
+
+	@Override
+	public void deleteLocationToOrgUnitMapping(LocationToOrgUnitMapping locationToOrgUnitMapping) {
+		getDao().deleteLocationToOrgUnitMapping(locationToOrgUnitMapping);
+	}
+
+	@Override
+	public void saveLocationToOrgUnitMapping(LocationToOrgUnitMapping locationToOrgUnitMapping) {
+		getDao().saveLocationToOrgUnitMapping(locationToOrgUnitMapping);
+	}
+
+	@Override
+	public void deleteLocationToOrgUnitMapping(Integer locationToOrgUnitMappingId) {
+		getDao().deleteLocationToOrgUnitMapping(getLocationToOrgUnitMapping(locationToOrgUnitMappingId));
+	}
+
+	@Override
+	public void deleteLocationToOrgUnitMappingsByLocation(Location location) {
+		getDao().deleteLocationToOrgUnitMappingsByLocation(location);
 	}
 }
