@@ -482,10 +482,11 @@ function populateOrgUnitsOfDataSet() {
 //     }
 // }
 
-function getReportData() {
+function getReportData(locationUid) {
     reportData = null;
     var reportGUID = selectedMapping.periodIndicatorReportGUID;
-    var locationGUID = jQuery('#locationSelect').val();
+    // var locationGUID = jQuery('#locationSelect').val();
+    var locationGUID = locationUid;
     let startDate = selectedStartDate;
     let endDate = selectedEndDate;
     if(document.getElementById('custom-range-option').checked){
@@ -539,8 +540,8 @@ function validateForm() {
     // Make sure we have no empty values
     ret &= testNotEmpty('#reportSelect', 'Report cannot be empty');
     ret &= testNotEmpty('#mappingSelect', 'Mapping cannot be empty');
-    ret &= testNotEmpty('#locationSelect', 'Location cannot be empty');
-    ret &= testNotEmpty('#orgUnitSelect', 'Organisational Unit cannot be empty');
+    // ret &= testNotEmpty('#locationSelect', 'Location cannot be empty');
+    // ret &= testNotEmpty('#orgUnitSelect', 'Organisational Unit cannot be empty');
 
     // Make sure mapping applies to report
     ret &= checkMappingAppliesToReport();
@@ -562,14 +563,15 @@ function getMappingForIndicator(indicator) {
     }
 }
 
-function buildDXFJSON() {
+function buildDXFJSON(locationUid, orgUnitId) {
     dxfJSON = null;
 
-    return getReportData().then(function () {
+    return getReportData(locationUid).then(function () {
         dxfJSON = {};
         dxfJSON.dataSet = selectedMapping.dataSetUID
         dxfJSON.period = selectedPeriod;
-        dxfJSON.orgUnit = jQuery('#orgUnitSelect').val();
+        // dxfJSON.orgUnit = jQuery('#orgUnitSelect').val();
+        dxfJSON.orgUnit = orgUnitId;
         var indicatorValues = reportData.dataSets[0].rows[0];
         var dataValues = [];
 
@@ -626,21 +628,27 @@ function downloadAdx() {
 }
 
 function sendDataToDHIS() {
-    if (validateForm()) {
-        buildDXFJSON().then(function () {
-            // post to dhis
-            jQuery.ajax({
-                url: OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/dhisdatavaluesets",
-                type: "POST",
-                data: JSON.stringify(dxfJSON),
-                contentType: "application/json;charset=utf-8",
-                dataType: "json",
-                success: function (data) {
-                    displayPostReponse(data);
-                }
-            });
+    console.log(availableLocations);
+    for (var i = 0; i < availableLocations.length ; i++) {
+        console.log(availableLocations[i]);
+        let locationId2 = availableLocations[i].locationId;
+        if (!(locationId2 == undefined)){
+            buildDXFJSON(availableLocations[i].locationUid, availableLocations[i].orgUnitUid).then(function () {
+                // post to dhis
+                jQuery.ajax({
+                    url: OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/dhisdatavaluesets",
+                    type: "POST",
+                    data: JSON.stringify(dxfJSON),
+                    contentType: "application/json;charset=utf-8",
+                    dataType: "json",
+                    success: function (data) {
+                        console.log(data);
+                        displayPostReponse(data);
+                    }
+                });
 
-        });
+            });
+        }
     }
 }
 
