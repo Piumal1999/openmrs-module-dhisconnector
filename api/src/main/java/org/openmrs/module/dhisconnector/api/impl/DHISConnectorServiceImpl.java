@@ -145,7 +145,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 	public static final String DHISCONNECTOR_MAPPING_FILE_SUFFIX = ".mapping.json";
 	
 	public static final String DHISCONNECTOR_ORGUNIT_RESOURCE = "/api/organisationUnits.json?paging=false&fields=:identifiable,displayName";
-	
+
 	public static final String DATAVALUESETS_PATH = "/api/dataValueSets";
 	
 	public static final String DATASETS_PATH = "/api/dataSets/";
@@ -1304,7 +1304,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			Calendar startDate = Calendar.getInstance(Context.getLocale());
 			Calendar endDate = Calendar.getInstance(Context.getLocale());
 			DHISMapping mapping = getMapping(reportToDatasetMapping.getMapping());
-			
+
 			if (mapping != null) {
 				Location location = reportToDatasetMapping.getLocation();
 				String periodType = mapping.getPeriodType();
@@ -1628,6 +1628,11 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 	@Override
 	public LocationToOrgUnitMapping getLocationToOrgUnitMapping(Integer id) {
 		return getDao().getLocationToOrgUnitMapping(id);
+	}
+
+	@Override
+	public LocationToOrgUnitMapping getLocationToOrgUnitMappingByOrgUnitUid(String orgUnitUid) {
+		return getDao().getLocationToOrgUnitMappingByOrgUnitUid(orgUnitUid);
 	}
 
 	@Override

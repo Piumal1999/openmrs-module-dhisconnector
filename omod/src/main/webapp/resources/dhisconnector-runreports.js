@@ -20,6 +20,7 @@ let selectedMapping = null;
 let selectedPeriod = null;
 let selectedStartDate = null;
 let selectedEndDate = null;
+let availableLocations = null;
 
 function populateReportsDropdown() {
     // fetch reports
@@ -57,6 +58,7 @@ function onMappingSelect() {
     document.getElementById('custom-range-option').checked = false;
     selectedStartDate = null;
     selectedEndDate = null;
+    populateOrgUnitsOfDataSet();
     toggleCustomRangeCheckbox(false);
     hidePeriodPickers();
     // Checks whether the period type is a financial year or not
@@ -443,6 +445,42 @@ function populateDHISOrgUnitsDropdown() {
         orgUnitSelect = data.results;
     });
 }
+
+function populateOrgUnitsOfDataSet() {
+    // fetch datasets
+    let datasetId = selectedMapping.dataSetUID;
+    availableLocations = [];
+    let locationMappings = jQuery('<tr id="orgUnitSelect"></tr>');
+    jQuery.get(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/dhisdatasets/" + datasetId + "?v=full", function (data) {
+        for (var i = 0; i < data.organisationUnits.length ; i++) {
+
+            let orgUnitName = data.organisationUnits[i].name;
+            jQuery.get(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/locationmappings/?orgUnitUid=" + data.organisationUnits[i].id, function (mappingData) {
+                mappingData.orgUnitName = orgUnitName;
+                availableLocations.push(mappingData);
+                if (mappingData.locationName.isUndefined) {
+                    locationMappings.append('<tr><td><input disabled type="checkbox"/><span id="">'+ mappingData.locationName +'=>'+ mappingData.orgUnitName +'</span></td></tr>');
+                } else {
+                    locationMappings.append('<tr><td><input type="checkbox"/><span>'+ mappingData.locationName +'=>'+ mappingData.orgUnitName +'</span></td></tr>');
+                }
+            });
+        }
+    });
+    console.log(availableLocations);
+    jQuery('#locationsList').html("");
+
+    jQuery('#locationsList').append(locationMappings);
+
+    jQuery("#locationMappings").hide().fadeIn("slow");
+}
+
+// let availableLocations = []
+// function getAllReportsData(){
+//     allReports = [];
+//     for (let locationGUID in availableLocations) {
+//         allReports.push(getReportData(locationGUID));
+//     }
+// }
 
 function getReportData() {
     reportData = null;

@@ -115,6 +115,8 @@ public interface DHISConnectorService extends OpenmrsService {
 
 	LocationToOrgUnitMapping getLocationToOrgUnitMapping(Integer id);
 
+	LocationToOrgUnitMapping getLocationToOrgUnitMappingByOrgUnitUid(String orgUnitUid);
+
 	void deleteLocationToOrgUnitMapping(LocationToOrgUnitMapping locationToOrgUnitMapping);
 
 	void saveLocationToOrgUnitMapping(LocationToOrgUnitMapping locationToOrgUnitMapping);

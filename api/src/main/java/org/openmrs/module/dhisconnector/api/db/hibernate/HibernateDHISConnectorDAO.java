@@ -98,6 +98,13 @@ public class HibernateDHISConnectorDAO implements DHISConnectorDAO {
 	}
 
 	@Override
+	public LocationToOrgUnitMapping getLocationToOrgUnitMappingByOrgUnitUid(String orgUnitUid) {
+		LocationToOrgUnitMapping locationToOrgUnitMapping = (LocationToOrgUnitMapping) sessionFactory.getCurrentSession()
+				.createQuery("from LocationToOrgUnitMapping r where r.orgUnitUid = :orgUnitUid").setParameter("orgUnitUid", orgUnitUid).uniqueResult();
+		return locationToOrgUnitMapping;
+	}
+
+	@Override
 	public void deleteLocationToOrgUnitMapping(LocationToOrgUnitMapping locationToOrgUnitMapping) {
 		sessionFactory.getCurrentSession().delete(locationToOrgUnitMapping);
 	}
