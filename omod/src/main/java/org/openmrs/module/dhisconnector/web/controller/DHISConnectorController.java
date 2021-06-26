@@ -482,29 +482,23 @@ public class DHISConnectorController {
 	@RequestMapping(value = "/module/dhisconnector/locationMapping", method = RequestMethod.POST)
 	public void postLocationMappings(ModelMap model, HttpServletRequest request) {
 		String response = "";
-//		String orgUnitUId = request.getParameter("orgUnit");
-//		String locationUuid = request.getParameter("location");
 		List<String> postResponse = new ArrayList<String>();
-		String[] locationMappings = request.getParameter("locMappings").split(",");
+		if (!request.getParameter("locMappings").isEmpty()){
+			String[] locationMappings = request.getParameter("locMappings").split(",");
 
-		for (String pair : locationMappings) {
-			String locationUuid = pair.split("=")[0];
-			String orgUnitUId = pair.split("=")[1];
-			if (StringUtils.isNotBlank(orgUnitUId) && StringUtils.isNotBlank(locationUuid)) {
-				Location location = Context.getLocationService().getLocationByUuid(locationUuid);
-				Context.getService(DHISConnectorService.class).deleteLocationToOrgUnitMappingsByLocation(location);
-				Context.getService(DHISConnectorService.class).saveLocationToOrgUnitMapping(
-						new LocationToOrgUnitMapping(location, orgUnitUId)
-				);
+			for (String pair : locationMappings) {
+				String locationUuid = pair.split("=")[0];
+				String orgUnitUId = pair.split("=")[1];
+				if (StringUtils.isNotBlank(orgUnitUId) && StringUtils.isNotBlank(locationUuid)) {
+					Location location = Context.getLocationService().getLocationByUuid(locationUuid);
+					Context.getService(DHISConnectorService.class).deleteLocationToOrgUnitMappingsByLocation(location);
+					Context.getService(DHISConnectorService.class).saveLocationToOrgUnitMapping(
+							new LocationToOrgUnitMapping(location, orgUnitUId)
+					);
+				}
 			}
+			response += " -> Save was successful";
 		}
-		response += " -> Save was successful";
-
-//		if (StringUtils.isNotBlank(orgUnitUId) && StringUtils.isNotBlank(locationUuid)) {
-//			Context.getService(DHISConnectorService.class).saveLocationToOrgUnitMapping(new LocationToOrgUnitMapping(
-//					Context.getLocationService().getLocationByUuid(locationUuid), orgUnitUId));
-//			response += " -> Save was successful";
-//		}
 
 		System.out.println(response);
 		model.addAttribute(response);

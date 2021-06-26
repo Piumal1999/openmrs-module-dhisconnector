@@ -72,7 +72,7 @@
                         <c:set value="${locationToOrgUnitMapping.orgUnitUid}" var="savedOrgUnitUuid"/>
                     </c:if>
                 </c:forEach>
-
+                <input name="savedOrgUnitUuidOf_${location.uuid}" type="hidden" value="${savedOrgUnitUuid}">
                 <td>
                 <select name="orgUnitOf_${location.uuid}" >
 
@@ -103,7 +103,7 @@
         jq("td[id^='location_']").each(function() {
             let location = this.id;
             let locationUuid = location.substr(9);
-            if (jq("[name='orgUnitOf_"+locationUuid+"']").val() != ""){
+            if (jq("[name='orgUnitOf_"+locationUuid+"']").val() != jq("[name='savedOrgUnitUuidOf_"+locationUuid+"']").val()){
                 locationMappings = locationMappings + locationUuid + "=" + jq("[name='orgUnitOf_"+locationUuid+"']").val() + ",";
             }
         })
