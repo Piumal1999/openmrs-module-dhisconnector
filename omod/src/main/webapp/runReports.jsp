@@ -35,7 +35,7 @@
     </tr>
     <tr>
       <td>
-        <div id="locationsList"><img class="spinner" src="../../moduleResources/dhisconnector/loading.gif"/></div>
+        <div id="locationsList">Select a Mapping to choose the Locations</div>
       </td>
     </tr>
     <tr>

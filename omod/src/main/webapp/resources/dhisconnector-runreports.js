@@ -447,6 +447,8 @@ function populateDHISOrgUnitsDropdown() {
 }
 
 function populateOrgUnitsOfDataSet() {
+    jQuery('#locationsList').html("<img className=\"spinner\" src=\"../../moduleResources/dhisconnector/loading.gif\"/>");
+
     // fetch datasets
     let datasetId = selectedMapping.dataSetUID;
     availableLocations = [];
@@ -458,10 +460,10 @@ function populateOrgUnitsOfDataSet() {
             jQuery.get(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/locationmappings/?orgUnitUid=" + data.organisationUnits[i].id, function (mappingData) {
                 mappingData.orgUnitName = orgUnitName;
                 availableLocations.push(mappingData);
-                if (mappingData.locationName.isUndefined) {
-                    locationMappings.append('<tr><td><input disabled type="checkbox"/><span id="">'+ mappingData.locationName +'=>'+ mappingData.orgUnitName +'</span></td></tr>');
+                if (mappingData.locationName === undefined) {
+                    locationMappings.append('<tr><td><input type="checkbox" disabled/><span id="">'+ mappingData.locationName +'=>'+ mappingData.orgUnitName +'</span></td></tr>');
                 } else {
-                    locationMappings.append('<tr><td><input type="checkbox"/><span>'+ mappingData.locationName +'=>'+ mappingData.orgUnitName +'</span></td></tr>');
+                    locationMappings.append('<tr><td><input type="checkbox" id="' + availableLocations.indexOf(mappingData) + '"/><span>'+ mappingData.locationName +'=>'+ mappingData.orgUnitName +'</span></td></tr>');
                 }
             });
         }
@@ -474,18 +476,9 @@ function populateOrgUnitsOfDataSet() {
     jQuery("#locationMappings").hide().fadeIn("slow");
 }
 
-// let availableLocations = []
-// function getAllReportsData(){
-//     allReports = [];
-//     for (let locationGUID in availableLocations) {
-//         allReports.push(getReportData(locationGUID));
-//     }
-// }
-
 function getReportData(locationUid) {
     reportData = null;
     var reportGUID = selectedMapping.periodIndicatorReportGUID;
-    // var locationGUID = jQuery('#locationSelect').val();
     var locationGUID = locationUid;
     let startDate = selectedStartDate;
     let endDate = selectedEndDate;
@@ -569,8 +562,7 @@ function buildDXFJSON(locationUid, orgUnitId) {
     return getReportData(locationUid).then(function () {
         dxfJSON = {};
         dxfJSON.dataSet = selectedMapping.dataSetUID
-        dxfJSON.period = selectedPeriod;
-        // dxfJSON.orgUnit = jQuery('#orgUnitSelect').val();
+        dxfJSON.period = selectedPeriod.toString();
         dxfJSON.orgUnit = orgUnitId;
         var indicatorValues = reportData.dataSets[0].rows[0];
         var dataValues = [];
@@ -600,40 +592,52 @@ function slugify(text) {
 }
 
 function displayPostReponse(json) {
-    jQuery('#responseRow').remove();
-    var reponseRow = jQuery('<tr id="responseRow"><th class="runHeader">Reponse</th><td><pre><code class="JSON">' + JSON.stringify(json, null, 2) + '</code></pre></td></tr>');
+    var reponseRow = jQuery('#responseRow');
+    reponseRow.append('<td><pre><code className="JSON">' + JSON.stringify(json, null, 2) + '</code></pre></td>');
 
-    jQuery('#tableBody').append(reponseRow);
     jQuery('pre code').each(function (i, block) {
         hljs.highlightBlock(block);
     });
-    reponseRow.hide().fadeIn("slow");
 }
 
 function downloadAdx() {
+    let selectedLocations = [];
+    jQuery("#orgUnitSelect input[type='checkbox']:checked").each(function() {
+        selectedLocations.push(availableLocations[this.id])
+    })
+
     if (validateForm()) {
-        buildDXFJSON().then(function () {
-            jQuery.ajax({
-                type : "GET",
-                url : "adxGenerator.form",
-                data: { "dxfDataValueSet": JSON.stringify(dxfJSON) },
-                datatype: "json",
-                success : function(activityMonitorData) {
-                    if(activityMonitorData)
-                        createDownload(activityMonitorData, 'application/xml', '.adx.xml');
-                }
-            });
-        });
+            for (let i = 0; i < selectedLocations.length ; i++) {
+                buildDXFJSON(selectedLocations[i].locationUid, selectedLocations[i].orgUnitUid).then(function () {
+                    jQuery.ajax({
+                        type: "GET",
+                        url: "adxGenerator.form",
+                        data: {"dxfDataValueSet": JSON.stringify(dxfJSON)},
+                        datatype: "json",
+                        success: function (activityMonitorData) {
+                            if (activityMonitorData)
+                                createDownload(activityMonitorData, 'application/xml', '.adx.xml', selectedLocations[i].orgUnitUid);
+                        }
+                    });
+                });
+        }
     }
 }
 
 function sendDataToDHIS() {
-    console.log(availableLocations);
-    for (var i = 0; i < availableLocations.length ; i++) {
-        console.log(availableLocations[i]);
-        let locationId2 = availableLocations[i].locationId;
-        if (!(locationId2 == undefined)){
-            buildDXFJSON(availableLocations[i].locationUid, availableLocations[i].orgUnitUid).then(function () {
+    let selectedLocations = [];
+    jQuery("#orgUnitSelect input[type='checkbox']:checked").each(function() {
+        selectedLocations.push(availableLocations[this.id])
+    })
+
+    console.log(selectedLocations);
+    jQuery('#responseRow').remove();
+    var reponseRow = jQuery('<tr id="responseRow"><th class="runHeader">Reponse</th></tr>');
+    for (let i = 0; i < selectedLocations.length ; i++) {
+        let locationId2 = selectedLocations[i].locationId;
+        if (!(locationId2 === undefined)){
+            buildDXFJSON(selectedLocations[i].locationUid, selectedLocations[i].orgUnitUid).then(function () {
+                console.log(dxfJSON);
                 // post to dhis
                 jQuery.ajax({
                     url: OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/dhisdatavaluesets",
@@ -650,13 +654,15 @@ function sendDataToDHIS() {
             });
         }
     }
+    jQuery('#tableBody').append(reponseRow);
+    reponseRow.hide().fadeIn("slow");
 }
 
-function createDownload(content, contentType, extension) {
+function createDownload(content, contentType, extension, orgUnitUid) {
     var dl = document.createElement('a');
 
     dl.setAttribute('href', 'data:' + contentType + ';charset=utf-8,' + encodeURIComponent(content));
-    dl.setAttribute('download', slugify(jQuery('#reportSelect option:selected').text()) + '-' + slugify(jQuery('#orgUnitSelect option:selected').text()) + '-' + slugify(jQuery('#periodSelector').val()) + extension);
+    dl.setAttribute('download', slugify(jQuery('#reportSelect option:selected').text()) + '-' + slugify(orgUnitUid) + '-' + slugify(selectedPeriod.toString()) + extension);
 
     dl.style.display = 'none';
     document.body.appendChild(dl);
@@ -667,10 +673,17 @@ function createDownload(content, contentType, extension) {
 }
 
 function generateDXFDownload() {
+    let selectedLocations = [];
+    jQuery("#orgUnitSelect input[type='checkbox']:checked").each(function() {
+        selectedLocations.push(availableLocations[this.id])
+    })
+
     if (validateForm()) {
-        buildDXFJSON().then(function () {
-            createDownload(JSON.stringify(dxfJSON), 'application/json', '.dxf.json');
-        });
+        for (let i = 0; i < selectedLocations.length ; i++) {
+            buildDXFJSON(selectedLocations[i].locationUid, selectedLocations[i].orgUnitUid).then(function () {
+                createDownload(JSON.stringify(dxfJSON), 'application/json', '.dxf.json', selectedLocations[i].orgUnitUid);
+            });
+        }
     }
 }
 
